@@ -12,20 +12,6 @@ if TYPE_CHECKING:
     from .printer import Printer
 
 
-def parse_keys(s, loc, toks):
-    toks_dict = toks.asDict()
-    return {toks_dict["key"][i]: toks_dict["value"][i] \
-        for i in range(len(toks_dict["key"]))}
-
-
-def parse_full(s, loc, toks):
-    if len(toks[0]) == 2:
-        test = {toks[0][1]: toks[1]}
-    else:
-        test = toks[1]
-    return (toks[0][0], test)
-
-
 def _parse_param(s, loc, toks):
     return toks.asDict()
 
@@ -90,6 +76,7 @@ class GitConfig:
         self.path = path
         self._str = None
         self._cleaned_str = None
+        self._config = self._load()
 
     def _load(self) -> str:
         with open(self.path, "rb") as f:
@@ -101,13 +88,16 @@ class GitConfig:
         self._load()
 
         # Remove comments from string
-        self._cleaned_str = self._remove_comments(self._str)
+        self._remove_comments(self._str)
 
         # Parse cleaned config file string
         self._config = _parse_gitconfig(self._cleaned_str)
 
     def _remove_comments(self):
-        return self.comment_regex.sub("", self._str)
+        self._cleaned_str = self.comment_regex.sub("", self._str)
+
+    def get_config(self):
+        return self._config
 
     def __repr__(self):
         return f"<GitConfig: {self.path}>"

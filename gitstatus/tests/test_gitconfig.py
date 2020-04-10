@@ -71,11 +71,13 @@ def test_remove_config_comments():
     """).strip()
 
     # Run
-    gc = GitConfig("fake_path")
+    with mock.patch("gitstatus.git.config.GitConfig._load"):
+        gc = GitConfig("fake_path")
     gc._str = str_with_comments
 
     # Check
-    assert gc._remove_comments() == str_without_comments
+    gc._remove_comments()
+    assert gc._cleaned_str == str_without_comments
     
 
 def test_parse_gitconfig(config):
