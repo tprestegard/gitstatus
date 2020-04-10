@@ -26,34 +26,59 @@ def parse_full(s, loc, toks):
     return (toks[0][0], test)
 
 
-def _parse_gitconfig(config: str) -> Dict[str, Any]:
-    # Header
-    header = Word(alphas) + Optional(QuotedString('"'))
-    full_header = Suppress(LineStart()) + \
-        nestedExpr(opener="[", closer="]", content=header) + \
-        Suppress(LineEnd())
+def _parse_param(s, loc, toks):
+    return toks.asDict()
 
-    # Keys
-    key = Word(alphas).setResultsName("key", listAllMatches=True) + \
-        Suppress(Literal("=")) + Suppress(Optional(" ")) + \
-        restOfLine().setResultsName("value", listAllMatches=True)
 
-    # Full pattern
-    full_pattern = full_header + ZeroOrMore(key).setParseAction(parse_keys)
-    full_pattern.setParseAction(parse_full)
+def _parse_params(s, loc, toks):
+    return {tok["key"]: tok["value"] for tok in toks}
 
+
+def _parse_header(s, loc, toks):
+    return toks.asDict()["header"][0][0]
+
+
+def _parse_full(s, loc, toks):
+    headers = toks.asDict()["header"]
+    params = toks.asDict()["params"]
     result = {}
-    for match in full_pattern.scanString(config):
-        key, value = match[0][0]
-        if key in result:
-            result[key].update(value)
-        else:
-            result.update({key: value})
+    for i in range(len(headers)):
+        h_m = headers[i].get("mainheader")
+        h_s = headers[i].get("subheader", None)
 
+        if h_s is None:
+            result.update({h_m: params[i]})
+        else:
+            if h_m in result:
+                result[h_m].update({h_s: params[i]})
+            else:
+                result.update({h_m: {h_s: params[i]}})
     return result
 
 
+def _parse_gitconfig(config: str) -> Dict[str, Any]:
+    # Header
+    header = Word(alphas).setResultsName("mainheader") + \
+        Optional(QuotedString('"')).setResultsName("subheader")
+    full_header = Suppress(LineStart()) + \
+        nestedExpr(opener="[", closer="]", content=header) + \
+        Suppress(LineEnd())
+    full_header.setParseAction(_parse_header)
 
+    # Keys
+    key = Word(alphas).setResultsName("key") + Suppress(Literal("=")) + \
+        Suppress(Optional(" ")) + restOfLine().setResultsName("value")
+    key.setParseAction(_parse_param)
+    params = ZeroOrMore(key).setParseAction(_parse_params)
+
+    ## Full pattern
+    full_pattern = ZeroOrMore(
+        full_header.setResultsName("header", listAllMatches=True) +
+        params.setResultsName("params", listAllMatches=True)
+    )
+    full_pattern.setParseAction(_parse_full)
+
+    return full_pattern.parseString(config)[0]
 
 
 class GitConfig:
