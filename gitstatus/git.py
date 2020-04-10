@@ -12,24 +12,46 @@ if TYPE_CHECKING:
     from .printer import Printer
 
 
+def parse_keys(s, loc, toks):
+    toks_dict = toks.asDict()
+    return {toks_dict["key"][i]: toks_dict["value"][i] \
+        for i in range(len(toks_dict["key"]))}
+
+
+def parse_full(s, loc, toks):
+    if len(toks[0]) == 2:
+        test = {toks[0][1]: toks[1]}
+    else:
+        test = toks[1]
+    return (toks[0][0], test)
+
+
 def _parse_gitconfig(config: str) -> Dict[str, Any]:
     # Header
     header = Word(alphas) + Optional(QuotedString('"'))
     full_header = Suppress(LineStart()) + \
         nestedExpr(opener="[", closer="]", content=header) + \
         Suppress(LineEnd())
-    #full_header = Suppress(LineStart()) + Suppress(Literal("[")) + \
-    #    header + Suppress(Literal("]")) + Suppress(LineEnd())
 
     # Keys
-    key = Word(alphas) + Suppress(Literal("=")) + Suppress(Optional(" ")) + \
-        restOfLine()
+    key = Word(alphas).setResultsName("key", listAllMatches=True) + \
+        Suppress(Literal("=")) + Suppress(Optional(" ")) + \
+        restOfLine().setResultsName("value", listAllMatches=True)
 
     # Full pattern
-    full_pattern = full_header + ZeroOrMore(key)
+    full_pattern = full_header + ZeroOrMore(key).setParseAction(parse_keys)
+    full_pattern.setParseAction(parse_full)
 
-    #return full_header
-    return [match for match in full_pattern.scanString(config)]
+    result = {}
+    for match in full_pattern.scanString(config):
+        key, value = match[0][0]
+        if key in result:
+            result[key].update(value)
+        else:
+            result.update({key: value})
+
+    return result
+
 
 class GitRepo:
 
@@ -112,7 +134,7 @@ class GitConfig:
         self._cleaned_str = self._remove_comments(self._str)
 
         # Parse cleaned config file string
-        self._config = {}
+        self._config = _parse_gitconfig(self._cleaned_str)
 
     def _remove_comments(self):
         return self.comment_regex.sub("", self._str)
