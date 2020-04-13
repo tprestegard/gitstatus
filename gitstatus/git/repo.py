@@ -1,25 +1,14 @@
 import os
-from pyparsing import (
-    oneOf, Optional, ZeroOrMore, StringEnd, Suppress, Literal, LineStart,
-    LineEnd, Word, Or, alphas, alphanums, printables, restOfLine,
-    QuotedString, nestedExpr
-)
-import re
-import subprocess
-from typing import Any, Dict, TYPE_CHECKING
 
 from .config import GitConfig
-
-if TYPE_CHECKING:
-    from .printer import Printer
+from .utils import run_command
 
 
 class GitRepo:
 
-    def __init__(self, path: str, printer: 'Printer'):
+    def __init__(self, path: str):
         # Assign attributes
-        self.path = path
-        self._printer = printer
+        self.path = os.path.expanduser(path)
         self._git_path = os.path.join(self.path, ".git")
         self._git_config_path = os.path.join(self._git_path, "config")
 
@@ -28,46 +17,56 @@ class GitRepo:
         self._check_is_git_repo()
 
         # Load config
-        self._config = GitConfig(self._git_config_path)
-
-    def _run_command(self, cmd: str):
-        p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        try:
-            stdout, stderr = p.communicate()
-        except Exception as ex:
-            pass
+        self.config = GitConfig(self._git_config_path).get_config()
 
     def _check_path_exists(self):
         if not os.path.exists(self.path):
-            self._printer.error(f"{self.path} does not exist", vlevel=0)
-            raise SystemExit(1)
+            raise FileNotFoundError(f"{self.path} does not exist")
         elif not os.path.isdir(self.path):
-            self._printer.error(f"{self.path} is not a directory", vlevel=0)
-            raise SystemExit(1)
+            raise TypeError(f"{self.path} is not a directory")
 
     def _check_is_git_repo(self):
         err_msg = None
         if not os.path.exists(self._git_path):
             err_msg = (f"Directory at {self.path} is not a git repo - "
                        "no .git directory")
-        elif not os.path.isdir(self._git_path):
+        elif not os.path.exists(self._git_config_path):
+            err_msg = (f"Git config (expected at {self._git_config_path}) "
+                       "does not exist")
+        if err_msg:
+            raise FileNotFoundError(err_msg)
+
+        if not os.path.isdir(self._git_path):
             err_msg = (f"Expected .git directory {self._git_path} is not a "
                        "directory")
-        elif not os.path.exists(self._git_config_path):
-            pass
         elif not os.path.isfile(self._git_config_path):
-            pass
+            err_msg = f"Git config ({self._git_config_path}) is not a file"
 
         if err_msg:
-            self._printer.error(err_msg)
-            raise SystemExit(1)
+            raise TypeError(err_msg)
 
-    def get_config(self):
-        return self._config.get_config()
-
-    def _check_has_remote(self):
+    def get_refs(self) -> str:
         pass
+
+    @property
+    def branches(self):
+        return list(self.config.get("branch"))
+
+    def fetch(self):
+        run_command(f"git --git-dir={self._git_path} fetch")
+
+    def checkout(self, branch: str):
+        # TODO error handling if the checkout fails
+        return run_command(f"git --git-dir={self._git_path} checkout {branch}")
+
+    def get_status(self):
+        return run_command(f"git --git-dir={self._git_path} status")
+
+    def save_stash(self):
+        run_command(f"git --git-dir={self._git_path} stash push -u")
+
+    def pop_stash(self):
+        run_command(f"git --git-dir={self._git_path} stash pop")
 
     def __repr__(self):
         return f"<GitRepo: {self.path}>"
