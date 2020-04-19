@@ -38,12 +38,12 @@ class Printer:
     # Print methods
     debug = lambda self, msg, indent = 0: \
         self._print(msg, LEVELS["debug"],
-                    header=click.style("[debug]", fg="blue"),
+                    header=click.style("[debug]  ", fg="blue"),
                     indent=indent)
 
     info = lambda self, msg, indent = 0: \
         self._print(msg, LEVELS["info"],
-                    header=click.style("[info]", fg="cyan"),
+                    header=click.style("[info]   ", fg="cyan"),
                     indent=indent)
 
     warning = lambda self, msg, indent = 0: \
@@ -53,5 +53,5 @@ class Printer:
 
     error = lambda self, msg, indent = 0: \
         self._print(msg, LEVELS["error"],
-                    header=click.style("[error]", fg="red"),
+                    header=click.style("[error]  ", fg="red"),
                     indent=indent)

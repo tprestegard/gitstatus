@@ -32,8 +32,8 @@ def check_repo(path, printer: Printer):
 @click.command()
 @click.option("-i", "--include", multiple=True, type=str, default=[])
 @click.option("-d", "--include-dir", multiple=True, type=str, default=[])
-@click.option("-l", "--log-level", type=click.Choice(list(LEVELS)),
-              default="info")
+@click.option("-l", "--log-level", default="info",
+              type=click.Choice([k for k in LEVELS if k != "quiet"]))
 def main(include: List[str], include_dir: List[str], log_level: str):
 
     # Set up printer
