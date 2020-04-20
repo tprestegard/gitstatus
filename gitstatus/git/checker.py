@@ -34,7 +34,7 @@ class GitChecker:
             return
 
         # Git fetch
-        #self.repo.fetch()
+        self.repo.fetch()
 
         # Check status of current branch: any uncommitted changes? Any untracked files?
         # TODO
