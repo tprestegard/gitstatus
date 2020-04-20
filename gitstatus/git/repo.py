@@ -1,8 +1,9 @@
+import configparser
 import json
 import os
+import re
 import typing
 
-from .config import GitConfig
 from .utils import run_command
 
 
@@ -11,6 +12,7 @@ if typing.TYPE_CHECKING:
 
 
 class GitRepo:
+    SECTION_REGEX = re.compile(r'^([a-zA-Z0-9]+) ?(?:"(.+)")?$')
 
     def __init__(self, path: str, printer: 'Printer'):
         # Assign attributes
@@ -23,7 +25,7 @@ class GitRepo:
         self._check_is_git_repo()
 
         # Load config
-        self.config = GitConfig(self._git_config_path).get_config()
+        self.config = self._load_config()
 
     def _check_path_exists(self):
         if not os.path.exists(self.path):
@@ -50,6 +52,26 @@ class GitRepo:
 
         if err_msg:
             raise TypeError(err_msg)
+
+    def _load_config(self):
+        cp = configparser.ConfigParser()
+        cp.read(self._git_config_path)
+        config = {}
+        for section_name in cp.sections():
+            match = self.SECTION_REGEX.search(section_name)
+            if not match:
+                # TODO
+                raise Exception(section_name)
+            header, subheader = match.groups()
+            params = dict(cp.items(section_name))
+            if subheader is None:
+                config.update({header: params})
+            else:
+                if header in config:
+                    config[header].update({subheader: params})
+                else:
+                    config.update({header: {subheader: params}})
+        return config
 
     @property
     def branches(self):
