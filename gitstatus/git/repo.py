@@ -1,12 +1,17 @@
 import os
+import typing
 
 from .config import GitConfig
 from .utils import run_command
 
 
+if typing.TYPE_CHECKING:
+    from ..printer import Printer
+
+
 class GitRepo:
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, printer: 'Printer'):
         # Assign attributes
         self.path = os.path.expanduser(path)
         self._git_path = os.path.join(self.path, ".git")
