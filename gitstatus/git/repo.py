@@ -1,3 +1,4 @@
+import json
 import os
 import typing
 
@@ -50,9 +51,6 @@ class GitRepo:
         if err_msg:
             raise TypeError(err_msg)
 
-    def get_refs(self) -> str:
-        pass
-
     @property
     def branches(self):
         return list(self.config.get("branch"))
@@ -60,18 +58,16 @@ class GitRepo:
     def fetch(self):
         run_command(f"git --git-dir={self._git_path} fetch")
 
-    def checkout(self, branch: str):
-        # TODO error handling if the checkout fails
-        return run_command(f"git --git-dir={self._git_path} checkout {branch}")
-
     def get_status(self):
         return run_command(f"git --git-dir={self._git_path} status")
 
-    def save_stash(self):
-        run_command(f"git --git-dir={self._git_path} stash push -u")
-
-    def pop_stash(self):
-        run_command(f"git --git-dir={self._git_path} stash pop")
+    def get_refs(self) -> str:
+        cmd = (f'git --git-dir={self._git_path} for-each-ref refs/heads '
+               '--format="{\\"name\\": \\"%(refname:short)\\", '
+               '\\"remote\\": \\"%(upstream:remotename)\\", '
+               '\\"status\\": \\"%(upstream:track)\\"}"')
+        output = run_command(cmd)
+        return [json.loads(entry) for entry in output.split("\n") if entry]
 
     def __repr__(self):
         return f"<GitRepo: {self.path}>"
