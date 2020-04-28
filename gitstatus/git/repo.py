@@ -19,6 +19,7 @@ class GitRepo:
         self.path = os.path.expanduser(path)
         self._git_path = os.path.join(self.path, ".git")
         self._git_config_path = os.path.join(self._git_path, "config")
+        self._current_branch = None
 
         # Do some checks
         self._check_path_exists()
@@ -76,6 +77,13 @@ class GitRepo:
     @property
     def branches(self):
         return list(self.config.get("branch"))
+
+    @property
+    def current_branch(self, force: bool = False):
+        if self._current_branch is None or force:
+            result = self._run_command("branch --show-current")
+            self._current_branch = result.strip()
+        return self._current_branch
 
     def fetch(self):
         self._run_command("fetch")
