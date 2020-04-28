@@ -20,9 +20,10 @@ FULL_STATUS_LOG_MSGS = {k: " | ".join([LOG_MSG_HEADER, v])
 
 
 class GitChecker:
-    def __init__(self, repo: 'GitRepo', printer: 'Printer'):
+    def __init__(self, repo: 'GitRepo', printer: 'Printer', **kwargs):
         self.repo = repo
         self.printer = printer
+        self.kwargs = kwargs
 
     def run_checks(self):
         # Check for any stashed changes
@@ -34,7 +35,8 @@ class GitChecker:
             return
 
         # Git fetch
-        self.repo.fetch()
+        if not self.kwargs.get("skip_fetch", False):
+            self.repo.fetch()
 
         # Check status of current branch: any uncommitted changes? Any untracked files?
         # TODO
@@ -52,7 +54,6 @@ class GitChecker:
                 self.printer.warning(msg)
                 break
 
-            print_method = "error"
             if "ahead" in branch["status"] and "behind" in branch["status"]:
                 msg_key = "both"
             elif "ahead" in branch["status"]:
@@ -61,13 +62,35 @@ class GitChecker:
                 msg_key = "behind"
             elif not branch["status"]:
                 msg_key = "synced"
-                print_method = "info"
             else:
                 # TODO
                 raise RuntimeError
+
+            # Get handler and run
             msg = FULL_STATUS_LOG_MSGS.get(msg_key).format(
                 repo=self.repo.path, branch=branch["name"])
-            getattr(self.printer, print_method)(msg)
+            handler = getattr(self, f"_handler_{msg_key}")
+            handler(msg, branch_name=branch["name"])
 
     def _repo_has_remote(self):
         return "remote" in self.repo.config
+
+    def _handler_behind(self, msg: str, **kwargs):
+        self.printer.error(msg)
+        if self.kwargs.get("pull_behind", False):
+            branch_name = kwargs.get("branch_name", None)
+            if branch_name:
+                try:
+                    self.repo.pull_branch(branch_name)
+                except Exception:
+                    self.printer.error("error pulling")
+                    raise
+                self.printer.info("Branch updated")
+
+    def _handler_both(self, msg: str, **kwargs):
+        self.printer.error(msg)
+
+    _handler_ahead = _handler_both
+
+    def _handler_synced(self, msg: str, **kwargs):
+        self.printer.info(msg)
