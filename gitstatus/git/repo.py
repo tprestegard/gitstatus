@@ -2,7 +2,7 @@ import configparser
 import json
 import os
 import re
-import typing
+from typing import Dict, List
 
 from .exceptions import NoRemoteError
 from .utils import run_command

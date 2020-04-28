@@ -78,7 +78,7 @@ def test_remove_config_comments():
     # Check
     gc._remove_comments()
     assert gc._cleaned_str == str_without_comments
-    
+
 
 def test_parse_gitconfig(config):
     expected_result = {

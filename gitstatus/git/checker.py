@@ -1,5 +1,3 @@
-import click
-
 import typing
 
 if typing.TYPE_CHECKING:

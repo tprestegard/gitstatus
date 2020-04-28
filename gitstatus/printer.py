@@ -21,7 +21,7 @@ class Printer:
         self._indent = '  '
 
     def _print(self, msg: str, msg_level: int, header: str = '',
-              indent: int = 0):
+               indent: int = 0):
         """Generic print method using click.secho"""
         # Just return if nothing should be printed
         if (msg_level < self.level):
@@ -36,22 +36,22 @@ class Printer:
         click.secho(msg)
 
     # Print methods
-    debug = lambda self, msg, indent = 0: \
+    def debug(self, msg: str, indent: int = 0):
         self._print(msg, LEVELS["debug"],
                     header=click.style("[debug]  ", fg="blue"),
                     indent=indent)
 
-    info = lambda self, msg, indent = 0: \
+    def info(self, msg: str, indent: int = 0):
         self._print(msg, LEVELS["info"],
                     header=click.style("[info]   ", fg="cyan"),
                     indent=indent)
 
-    warning = lambda self, msg, indent = 0: \
+    def warning(self, msg: str, indent: int = 0):
         self._print(msg, LEVELS["warning"],
                     header=click.style("[warning]", fg="yellow"),
                     indent=indent)
 
-    error = lambda self, msg, indent = 0: \
+    def error(self, msg: str, indent: int = 0):
         self._print(msg, LEVELS["error"],
                     header=click.style("[error]  ", fg="red"),
                     indent=indent)
