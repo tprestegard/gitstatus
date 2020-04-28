@@ -31,7 +31,7 @@ class GitChecker:
 
         # Check if repo has a remote
         if not self._repo_has_remote():
-            # TODO: print something
+            self.printer.error(f"Git repo {self.repo.path} has no remote")
             return
 
         # Git fetch
@@ -52,7 +52,7 @@ class GitChecker:
                 msg = FULL_STATUS_LOG_MSGS.get("no-remote").format(
                     repo=self.repo.path, branch=branch["name"])
                 self.printer.warning(msg)
-                break
+                continue
 
             if "ahead" in branch["status"] and "behind" in branch["status"]:
                 msg_key = "both"
