@@ -18,7 +18,7 @@ def run_command(cmd: str, fail_on_error: bool = True) -> str:
     # Return output
     if p.returncode > 0:
         if fail_on_error:
-            raise RuntimeError
+            raise RuntimeError(f"Command {cmd} failed: {stderr.decode()}")
         return stderr.decode()
     else:
         return stdout.decode()

@@ -8,14 +8,10 @@ from .exceptions import NoRemoteError
 from .utils import run_command
 
 
-if typing.TYPE_CHECKING:
-    from ..printer import Printer
-
-
 class GitRepo:
     SECTION_REGEX = re.compile(r'^([a-zA-Z0-9]+) ?(?:"(.+)")?$')
 
-    def __init__(self, path: str, printer: 'Printer'):
+    def __init__(self, path: str):
         # Assign attributes
         self.path = os.path.expanduser(path)
         self._git_path = os.path.join(self.path, ".git")
