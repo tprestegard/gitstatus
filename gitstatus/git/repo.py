@@ -4,6 +4,7 @@ import os
 import re
 import typing
 
+from .exceptions import NoRemoteError
 from .utils import run_command
 
 
@@ -98,6 +99,26 @@ class GitRepo:
                '\\"status\\": \\"%(upstream:track)\\"}"')
         output = self._run_command(cmd)
         return [json.loads(entry) for entry in output.split("\n") if entry]
+
+    def pull_branch(self, branch_name: str):
+        # Try to get the branch from the config. If branch is None, it doesn't
+        # have a remote
+        branch = self.config.get("branch", {}).get(branch_name, None)
+        if branch is None:
+            raise NoRemoteError(f"Branch {branch_name} has no remote")
+
+        # Otherwise, get the command to run
+        if branch_name == self.current_branch:
+            # Have to use 'git pull' if we are trying to update the
+            # current branch
+            cmd = "pull"
+        else:
+            # Use this 'git fetch' variation to pull into another branch; for
+            # some reason it doesn't work on the current branch
+            cmd = f'fetch {branch["remote"]} {branch_name}:{branch_name}'
+
+        # Run command
+        output = self._run_command(cmd)
 
     def _run_command(self, cmd: str):
         return run_command(
