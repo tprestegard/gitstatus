@@ -78,18 +78,23 @@ class GitRepo:
         return list(self.config.get("branch"))
 
     def fetch(self):
-        run_command(f"git --git-dir={self._git_path} fetch")
+        self._run_command("fetch")
 
     def get_status(self):
-        return run_command(f"git --git-dir={self._git_path} status")
+        return self._run_command("status")
 
-    def get_refs(self) -> str:
-        cmd = (f'git --git-dir={self._git_path} for-each-ref refs/heads '
+    def get_refs(self) -> List[Dict[str, str]]:
+        cmd = (f'for-each-ref refs/heads '
                '--format="{\\"name\\": \\"%(refname:short)\\", '
                '\\"remote\\": \\"%(upstream:remotename)\\", '
                '\\"status\\": \\"%(upstream:track)\\"}"')
-        output = run_command(cmd)
+        output = self._run_command(cmd)
         return [json.loads(entry) for entry in output.split("\n") if entry]
+
+    def _run_command(self, cmd: str):
+        return run_command(
+            f"git -C {self.path} --git-dir={self._git_path} {cmd}"
+        )
 
     def __repr__(self):
         return f"<GitRepo: {self.path}>"
