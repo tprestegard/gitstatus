@@ -36,16 +36,21 @@ class GitChecker:
         if not self.kwargs.get("skip_fetch", False):
             self.repo.fetch()
 
-        # Check status of current branch: any uncommitted changes? Any
-        # untracked files? Handle cases where current ref is not a branch
-        # (could be rebasing, merging, etc.)
-        # TODO
+        # Is repo currently on a branch?
+        if not self.repo.current_branch:
+            self.printer.error(f"Repo {self.repo.path} is not on a branch")
+
+        # Any uncommitted changes?
+        if self.repo.has_uncommitted_changes:
+            self.printer.error(f"Repo {self.repo.path} has uncommitted "
+                               "changes")
+
+        # Any untracked files?
+        if self.repo.has_untracked_files:
+            self.printer.error(f"Repo {self.repo.path} has untracked files")
 
         # Get status of current refs and parse it
         refs = self.repo.get_refs()
-
-        # TODO: make current branch first so we can print the additional checks
-        # and it doesn't look weird?
 
         # Loop over branches and print status (behind, ahead, both, in-sync,
         # no remote)

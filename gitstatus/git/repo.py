@@ -17,6 +17,7 @@ class GitRepo:
         self._git_path = os.path.join(self.path, ".git")
         self._git_config_path = os.path.join(self._git_path, "config")
         self._current_branch = None
+        self._status = None
 
         # Do some checks
         self._check_path_exists()
@@ -85,9 +86,6 @@ class GitRepo:
     def fetch(self):
         self._run_command("fetch")
 
-    def get_status(self):
-        return self._run_command("status")
-
     def get_refs(self) -> List[Dict[str, str]]:
         cmd = (f'for-each-ref refs/heads '
                '--format="{\\"name\\": \\"%(refname:short)\\", '
@@ -95,6 +93,30 @@ class GitRepo:
                '\\"status\\": \\"%(upstream:track)\\"}"')
         output = self._run_command(cmd)
         return [json.loads(entry) for entry in output.split("\n") if entry]
+
+    def get_status(self):
+        output = self._run_command("status --porcelain")
+        if not output:
+            self._status = {}
+        else:
+            self._status = dict(e.strip().split(' ', 1)[::-1] for e in
+                                output.strip().split('\n'))
+
+    @property
+    def has_uncommitted_changes(self):
+        if not self._status:
+            self.get_status()
+        if "M" in list(self._status.values()):
+            return True
+        return False
+
+    @property
+    def has_untracked_files(self):
+        if not self._status:
+            self.get_status()
+        if "??" in list(self._status.values()):
+            return True
+        return False
 
     def pull_branch(self, branch_name: str):
         # Try to get the branch from the config. If branch is None, it doesn't
