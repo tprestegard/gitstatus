@@ -5,7 +5,7 @@ import re
 from typing import Dict, List
 
 from .exceptions import NoRemoteError
-from .utils import run_command
+from ..utils import run_command
 
 
 class GitRepo:
