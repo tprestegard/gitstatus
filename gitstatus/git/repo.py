@@ -59,8 +59,8 @@ class GitRepo:
         for section_name in cp.sections():
             match = self.SECTION_REGEX.search(section_name)
             if not match:
-                # TODO
-                raise Exception(section_name)
+                raise ValueError("Error parsing git config section "
+                                 f"{section_name}")
             header, subheader = match.groups()
             params = dict(cp.items(section_name))
             if subheader is None:
@@ -136,7 +136,7 @@ class GitRepo:
             cmd = f'fetch {branch["remote"]} {branch_name}:{branch_name}'
 
         # Run command
-        output = self._run_command(cmd)
+        self._run_command(cmd)
 
     def _run_command(self, cmd: str):
         return run_command(

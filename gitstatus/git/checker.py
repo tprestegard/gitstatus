@@ -71,8 +71,7 @@ class GitChecker:
             elif not branch["status"]:
                 msg_key = "synced"
             else:
-                # TODO
-                raise RuntimeError
+                raise ValueError(f'Invalid branch status {branch["status"]}')
 
             # Get handler and run
             msg = FULL_STATUS_LOG_MSGS.get(msg_key).format(
@@ -91,9 +90,9 @@ class GitChecker:
                 try:
                     self.repo.pull_branch(branch_name)
                 except Exception:
-                    self.printer.error("error pulling")
-                    raise
-                self.printer.info("Branch updated")
+                    self.printer.error("Error pulling branch from remote")
+                else:
+                    self.printer.info("Branch updated")
 
     def _handler_both(self, msg: str, **kwargs):
         self.printer.error(msg)

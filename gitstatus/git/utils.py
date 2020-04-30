@@ -12,8 +12,8 @@ def run_command(cmd: str, fail_on_error: bool = True) -> str:
     try:
         stdout, stderr = p.communicate()
     except Exception as ex:
-        # TODO - print something
-        raise
+        print(f'Error executing command "{cmd}": {str(ex)}')
+        raise SystemExit(1)
 
     # Return output
     if p.returncode > 0:

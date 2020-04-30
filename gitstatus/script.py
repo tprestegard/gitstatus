@@ -21,13 +21,8 @@ def check_repo(path: str, printer: Printer, **kwargs):
         printer.debug(f"{path} does not appear to be a git repo, skipping")
         return
 
-    # Get parameters from kwargs
-    pull_behind = kwargs.get("pull_behind", False)
-    skip_fetch = kwargs.get("skip_fetch", False)
-
     # Analyze actual repos
-    checker = GitChecker(repo, printer, pull_behind=pull_behind,
-                         skip_fetch=skip_fetch)
+    checker = GitChecker(repo, printer, **kwargs)
     checker.run_checks()
 
 
