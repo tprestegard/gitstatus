@@ -22,32 +22,48 @@ class GitChecker:
         self.repo = repo
         self.printer = printer
         self.kwargs = kwargs
+        self.repo_issues = []
+        self.branch_issues = {}
 
     def run_checks(self):
-        # Check for any stashed changes
-        self.printer.debug(f"Checking git repo {self.repo.path}")
+        # Check some things about the current status of the repo
+        self.repo_issues
+        self.data.update({
+            "has_remote": self._repo.has_remote(),
+            "on_branch": bool(self.repo.current_branch),
+            "uncommitted_changes": self.repo.has_uncommitted_changes,
+            "untracked_files": self.
 
-        # Check if repo has a remote
+        })["has_remote"] = self._repo_has_remote()
+        self.data
+
         if not self._repo_has_remote():
-            self.printer.error(f"Git repo {self.repo.path} has no remote")
+            self.repo_issues.append() # TODO
+            self.data["has_remote"] = False
             return
-
-        # Git fetch
-        if not self.kwargs.get("skip_fetch", False):
-            self.repo.fetch()
 
         # Is repo currently on a branch?
         if not self.repo.current_branch:
-            self.printer.error(f"Repo {self.repo.path} is not on a branch")
+            self.data["on_branch"] = False
 
         # Any uncommitted changes?
         if self.repo.has_uncommitted_changes:
-            self.printer.error(f"Repo {self.repo.path} has uncommitted "
-                               "changes")
+            self.data["uncommitted_changes"] 
+            self.printer.echo(f"Repo {self.repo.path} has uncommitted "
+                              "changes", level="debug", indent=1)
 
         # Any untracked files?
         if self.repo.has_untracked_files:
-            self.printer.error(f"Repo {self.repo.path} has untracked files")
+            self.printer.echo(f"Repo {self.repo.path} has untracked files",
+                              level="debug", indent=1)
+
+        # Git fetch
+        if not self.kwargs.get("skip_fetch", False):
+            try:
+                self.repo.fetch()
+            except Exception as ex:
+                self.printer.echo(f"Error fetching remote for repo "
+                                  "{self.repo.path}: {str(ex)}")
 
         # Get status of current refs and parse it
         refs = self.repo.get_refs()
@@ -92,7 +108,7 @@ class GitChecker:
                 except Exception:
                     self.printer.error("Error pulling branch from remote")
                 else:
-                    self.printer.info("Branch updated")
+                    self.printer.echo("Branch updated", level="debug")
 
     def _handler_both(self, msg: str, **kwargs):
         self.printer.error(msg)

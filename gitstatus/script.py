@@ -4,7 +4,8 @@ from typing import List
 import click
 
 from .git import GitChecker, GitRepo
-from .printer import Printer, LEVELS
+from .printer import Printer
+from .summary import SUMMARY_TYPES
 
 
 # Helper function
@@ -18,7 +19,8 @@ def check_repo(path: str, printer: Printer, **kwargs):
     try:
         repo = GitRepo(path)
     except FileNotFoundError:
-        printer.debug(f"{path} does not appear to be a git repo, skipping")
+        printer.echo(f"{path} does not appear to be a git repo, skipping",
+                     "debug")
         return
 
     # Analyze actual repos
@@ -29,18 +31,22 @@ def check_repo(path: str, printer: Printer, **kwargs):
 @click.command()
 @click.option("-i", "--include", multiple=True, type=str, default=[])
 @click.option("-d", "--include-dir", multiple=True, type=str, default=[])
-@click.option("-l", "--log-level", default="info",
-              type=click.Choice([k for k in LEVELS if k != "quiet"]))
+@click.option("-v", "--verbose", is_flag=True, help="Run in verbose mode")
+@click.option("-s", "--summary-type", type=click.Choice(list(SUMMARY_TYPES)),
+              default=list(SUMMARY_TYPES)[0], show_default=True,
+              help="TBD")
 @click.option("--pull-behind", is_flag=True,
               help="Pull any branches that are behind remote. Only for cases "
                    "where a simple pull will sync the branches.")
 @click.option("--skip-fetch", is_flag=True,
               help="Skip fetching from remote to speed up runtime.")
-def main(include: List[str], include_dir: List[str], log_level: str,
-         pull_behind: bool, skip_fetch: bool):
+def main(include: List[str], include_dir: List[str], verbose: bool,
+         summary_type: str, pull_behind: bool, skip_fetch: bool):
     """
     TBD full docstring
     """
+    # Get log level based on verbose arg
+    log_level = "debug" if verbose else "info"
 
     # Set up printer
     printer = Printer(level=log_level)
