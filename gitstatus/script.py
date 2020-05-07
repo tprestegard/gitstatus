@@ -5,14 +5,14 @@ import click
 
 from .git import GitChecker, GitRepo
 from .printer import Printer
-from .summary import SUMMARY_TYPES
+from .summary import BasicSummary, SUMMARY_TYPES
 
 
 # Helper function
 def check_repo(path: str, printer: Printer, **kwargs):
     # Skip non-directories
     if not os.path.isdir(path):
-        printer.debug(f"{path} is not a directory, skipping")
+        printer.echo(f"{path} is not a directory, skipping", level="debug")
         return
 
     # Skip non-repos without failing
@@ -20,12 +20,18 @@ def check_repo(path: str, printer: Printer, **kwargs):
         repo = GitRepo(path)
     except FileNotFoundError:
         printer.echo(f"{path} does not appear to be a git repo, skipping",
-                     "debug")
+                     level="debug")
         return
 
     # Analyze actual repos
     checker = GitChecker(repo, printer, **kwargs)
     checker.run_checks()
+
+    # Combine issues and return
+    return {
+        "repo": checker.repo_issues,
+        "branch": checker.branch_issues,
+    }
 
 
 @click.command()
@@ -51,17 +57,28 @@ def main(include: List[str], include_dir: List[str], verbose: bool,
     # Set up printer
     printer = Printer(level=log_level)
 
+    # Dict for holding issues
+    full_issues = {}
+
     # Loop over included directories
     for top_dir in include_dir:
         top_dir = os.path.abspath(os.path.expanduser(top_dir))
-        printer.debug(f"Getting all directories in {top_dir}")
+        #printer.debug(f"Getting all directories in {top_dir}")
         for sub_dir in os.listdir(top_dir):
             abs_path = os.path.join(top_dir, sub_dir)
-            check_repo(abs_path, printer, pull_behind=pull_behind,
-                       skip_fetch=skip_fetch)
+            issues = check_repo(abs_path, printer, pull_behind=pull_behind,
+                                skip_fetch=skip_fetch)
+            if issues is not None:
+                full_issues[abs_path] = issues
 
     # Loop over repos that were directly included
     for path in include:
-        path = os.path.abspath(os.path.expanduser(path))
-        check_repo(path, printer, pull_behind=pull_behind,
-                   skip_fetch=skip_fetch)
+        abs_path = os.path.abspath(os.path.expanduser(path))
+        checker = check_repo(abs_path, printer, pull_behind=pull_behind,
+                             skip_fetch=skip_fetch)
+        if issues is not None:
+            full_issues[abs_path] = issues
+
+    # Print summary
+    summarizer = BasicSummary(full_issues)
+    summarizer._format_table()

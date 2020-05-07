@@ -1,20 +1,10 @@
-import typing
+from typing import Dict, TYPE_CHECKING
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from .repo import GitRepo
     from ..printer import Printer
 
-
-LOG_MSG_HEADER = "Repo {repo} [{branch}]"
-BRANCH_STATUSES = {
-    "no-remote": "No remote",
-    "ahead": "Ahead of remote",
-    "behind": "Behind remote",
-    "both": "Out of sync with remote (both ahead and behind)",
-    "synced": "In sync with remote",
-}
-FULL_STATUS_LOG_MSGS = {k: " | ".join([LOG_MSG_HEADER, v])
-                        for k, v in BRANCH_STATUSES.items()}
+from .issues import repo as REPO, branch as BRANCH
 
 
 class GitChecker:
@@ -26,36 +16,21 @@ class GitChecker:
         self.branch_issues = {}
 
     def run_checks(self):
-        # Check some things about the current status of the repo
-        self.repo_issues
-        self.data.update({
-            "has_remote": self._repo.has_remote(),
-            "on_branch": bool(self.repo.current_branch),
-            "uncommitted_changes": self.repo.has_uncommitted_changes,
-            "untracked_files": self.
-
-        })["has_remote"] = self._repo_has_remote()
-        self.data
-
+        # Does repo have a remote?
         if not self._repo_has_remote():
-            self.repo_issues.append() # TODO
-            self.data["has_remote"] = False
-            return
+            self.repo_issues.append(REPO.NO_REMOTE)
 
         # Is repo currently on a branch?
         if not self.repo.current_branch:
-            self.data["on_branch"] = False
+            self.repo_issues.append(REPO.NOT_ON_BRANCH)
 
         # Any uncommitted changes?
         if self.repo.has_uncommitted_changes:
-            self.data["uncommitted_changes"] 
-            self.printer.echo(f"Repo {self.repo.path} has uncommitted "
-                              "changes", level="debug", indent=1)
+            self.repo_issues.append(REPO.UNCOMMITTED_CHANGES)
 
         # Any untracked files?
         if self.repo.has_untracked_files:
-            self.printer.echo(f"Repo {self.repo.path} has untracked files",
-                              level="debug", indent=1)
+            self.repo_issues.append(REPO.UNTRACKED_FILES)
 
         # Git fetch
         if not self.kwargs.get("skip_fetch", False):
@@ -68,52 +43,29 @@ class GitChecker:
         # Get status of current refs and parse it
         refs = self.repo.get_refs()
 
-        # Loop over branches and print status (behind, ahead, both, in-sync,
-        # no remote)
+        # Loop over branches and check for issues
         for branch in sorted(refs, key=lambda d: d["name"]):
-            self.printer.debug(f"Checking branch {branch['name']}")
-            if not branch["remote"]:
-                msg = FULL_STATUS_LOG_MSGS.get("no-remote").format(
-                    repo=self.repo.path, branch=branch["name"])
-                self.printer.warning(msg)
-                continue
+            self.branch_issues[branch["name"]] = self.check_branch(branch)
 
-            if "ahead" in branch["status"] and "behind" in branch["status"]:
-                msg_key = "both"
-            elif "ahead" in branch["status"]:
-                msg_key = "ahead"
-            elif "behind" in branch["status"]:
-                msg_key = "behind"
-            elif not branch["status"]:
-                msg_key = "synced"
-            else:
-                raise ValueError(f'Invalid branch status {branch["status"]}')
+    def check_branch(self, branch: Dict[str, str]):
+        issues = []
+        if not branch["remote"]:
+            issues.append(BRANCH.NO_REMOTE)
+            return issues
 
-            # Get handler and run
-            msg = FULL_STATUS_LOG_MSGS.get(msg_key).format(
-                repo=self.repo.path, branch=branch["name"])
-            handler = getattr(self, f"_handler_{msg_key}")
-            handler(msg, branch_name=branch["name"])
+        if "ahead" in branch["status"] and "behind" in branch["status"]:
+            issues.append(BRANCH.AHEAD_OF_REMOTE)
+            issues.append(BRANCH.BEHIND_REMOTE)
+        elif "ahead" in branch["status"]:
+            issues.append(BRANCH.AHEAD_OF_REMOTE)
+        elif "behind" in branch["status"]:
+            issues.append(BRANCH.BEHIND_REMOTE)
+        elif not branch["status"]:
+            pass
+        else:
+            issues.append(BRANCH.INVALID_STATUS)
+
+        return issues
 
     def _repo_has_remote(self):
         return "remote" in self.repo.config
-
-    def _handler_behind(self, msg: str, **kwargs):
-        self.printer.error(msg)
-        if self.kwargs.get("pull_behind", False):
-            branch_name = kwargs.get("branch_name", None)
-            if branch_name:
-                try:
-                    self.repo.pull_branch(branch_name)
-                except Exception:
-                    self.printer.error("Error pulling branch from remote")
-                else:
-                    self.printer.echo("Branch updated", level="debug")
-
-    def _handler_both(self, msg: str, **kwargs):
-        self.printer.error(msg)
-
-    _handler_ahead = _handler_both
-
-    def _handler_synced(self, msg: str, **kwargs):
-        self.printer.info(msg)
