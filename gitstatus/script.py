@@ -74,11 +74,11 @@ def main(include: List[str], include_dir: List[str], verbose: bool,
     # Loop over repos that were directly included
     for path in include:
         abs_path = os.path.abspath(os.path.expanduser(path))
-        checker = check_repo(abs_path, printer, pull_behind=pull_behind,
+        issues = check_repo(abs_path, printer, pull_behind=pull_behind,
                              skip_fetch=skip_fetch)
         if issues is not None:
             full_issues[abs_path] = issues
 
     # Print summary
     summarizer = BasicSummary(full_issues)
-    summarizer._format_table()
+    print(summarizer._format_table())
