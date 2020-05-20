@@ -5,7 +5,7 @@ import click
 
 from .git import GitChecker, GitRepo
 from .printer import Printer
-from .summary.summary import BasicSummary, RepoSummary, SUMMARY_TYPES
+from .summary.summary import BasicSummary, RepoSummary, SUMMARY_TYPES, DetailedSummary
 
 
 # Helper function
@@ -80,6 +80,7 @@ def main(include: List[str], include_dir: List[str], verbose: bool,
 
     # Print summary
     #summarizer = BasicSummary(full_issues)
-    summarizer = RepoSummary(full_issues)
+    #summarizer = RepoSummary(full_issues)
+    summarizer = DetailedSummary(full_issues)
     print(summarizer.summarize())
     

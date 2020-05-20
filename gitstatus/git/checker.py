@@ -32,6 +32,8 @@ class GitChecker:
         if self.repo.has_untracked_files:
             self.repo_issues.append(REPO.UNTRACKED_FILES)
 
+        # TODO: any stashed changes?
+
         # Git fetch
         if not self.kwargs.get("skip_fetch", False):
             try:
