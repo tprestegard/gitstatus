@@ -52,7 +52,5 @@ setup(
     packages=find_packages(),
     classifiers=CLASSIFIERS,
     install_requires=get_requirements(),
-    entry_points={
-        "console_scripts": ("gitstatus=gitstatus.script:main",)
-    },
+    entry_points={"console_scripts": ("gitstatus=gitstatus.cli:main",)},
 )

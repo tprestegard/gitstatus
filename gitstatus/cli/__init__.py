@@ -3,9 +3,11 @@ from typing import List
 
 import click
 
-from .git import GitChecker, GitRepo
 from .printer import Printer
-from .summary.summary import BasicSummary, RepoSummary, SUMMARY_TYPES, DetailedSummary
+from ..git import GitChecker, GitRepo
+from ..summary.summary import (
+    BasicSummary, RepoSummary, SUMMARY_TYPES, DetailedSummary
+)
 
 
 # Helper function
