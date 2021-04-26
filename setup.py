@@ -1,9 +1,17 @@
 import os
 import re
 from setuptools import setup, find_packages
+from typing import List
 
 
-def parse_version(path):
+def get_requirements -> List[str]:
+    """Get list of requirements from requirements.txt file"""
+    with open("requirements.txt") as fp:
+        requirements = [buf.rstrip() for bug in fp.readlines()]
+    return requirements
+
+
+def get_version(path: str) -> str:
     """Extract the `__version__` string from the given file"""
     with open(path, 'r') as fp:
         version_file = fp.read()
@@ -35,7 +43,7 @@ CLASSIFIERS = [
 ###############################################################################
 setup(
     name="gitstatus",
-    version=parse_version(os.path.join("gitstatus", "version.py")),
+    version=get_version(os.path.join("gitstatus", "version.py")),
     author=("Tanner Prestegard"),
     author_email="tprestegard@gmail.com",
     description=("A Python package for checking the status of your local git "
@@ -43,7 +51,7 @@ setup(
     license="GPL-3.0-or-later",
     packages=find_packages(),
     classifiers=CLASSIFIERS,
-    install_requires=("Click==7.0",),
+    install_requires=get_requirements(),
     entry_points={
         "console_scripts": ("gitstatus=gitstatus.script:main",)
     },
