@@ -1,0 +1,44 @@
+stages:
+- test
+
+format:
+  stage: test
+  image: python:3.8-slim
+  script:
+    - pip install flake8 black
+    - flake8 .
+    - black --line-length 79 --diff --check --include '\.py$' .
+
+.test: &test
+  stage: test
+  image: python
+  script:
+    - pip install tox
+    - tox -e python
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+
+test:python3.6:
+  <<: *test
+  image: python:3.6-slim
+  only:
+    refs:
+      master
+
+test:python3.7:
+  <<: *test
+  image: python:3.7-slim
+  only:
+    refs:
+      master
+
+# Test Python 3.8 on all pushes
+test:python3.8:
+  <<: *test
+  image: python:3.8-slim
+
+test:python3.9:
+  <<: *test
+  image: python:3.9-slim
+  only:
+    refs:
+      master
