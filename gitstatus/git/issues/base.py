@@ -1,5 +1,3 @@
-
-
 class Issue:
     def __init__(self, name: str, type: str):
         self.name = name

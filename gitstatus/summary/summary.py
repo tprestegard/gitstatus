@@ -1,17 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-import click
-
 from .table import SimpleTable
 from .types import BoldGreenStr, BoldRedStr
 
 
-SUMMARY_TYPES = {
-    "repo": "",
-    "branch": "",
-    "both": ""
-}
+SUMMARY_TYPES = {"repo": "", "branch": "", "both": ""}
 
 # Summary is a dict with keys that are repo names and values
 # that are dicts with keys "branch" and "repo". "branch" values
@@ -33,8 +27,9 @@ class SummaryBase(ABC):
         pass
 
     def summarize(self) -> str:
-        return self.TABLE_CLASS(self.rows, self.COLUMN_TITLES,
-                                self.COLUMN_WIDTHS).as_str()
+        return self.TABLE_CLASS(
+            self.rows, self.COLUMN_TITLES, self.COLUMN_WIDTHS
+        ).as_str()
 
 
 class BasicSummary(SummaryBase):
@@ -44,7 +39,7 @@ class BasicSummary(SummaryBase):
     def _process_issues(self, issues: Dict[str, Any]) -> List[List[str]]:
         rows = []
         for k, v in issues.items():
-            any_issues = bool(v['repo']) or any(v['branch'].values())
+            any_issues = bool(v["repo"]) or any(v["branch"].values())
             result = BoldRedStr("NOT OK") if any_issues else BoldGreenStr("OK")
             rows.append([k, result])
         return rows

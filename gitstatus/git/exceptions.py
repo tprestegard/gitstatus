@@ -1,5 +1,3 @@
-
-
 class NoRemoteError(Exception):
     pass
 

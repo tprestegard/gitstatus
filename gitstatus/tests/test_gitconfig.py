@@ -11,7 +11,8 @@ from gitstatus.git.config import GitConfig, _parse_gitconfig
 ###############################################################################
 @pytest.fixture
 def config():
-    return textwrap.dedent("""
+    return textwrap.dedent(
+        """
         [core]
                 repositoryformatversion = 0
                 filemode = true
@@ -38,7 +39,8 @@ def config():
         [branch "python3"]
                 remote = origin
                 merge = refs/heads/python3
-    """).strip()
+    """
+    ).strip()
 
 
 ###############################################################################
@@ -46,7 +48,8 @@ def config():
 ###############################################################################
 def test_remove_config_comments():
     # Setup
-    str_with_comments = textwrap.dedent("""
+    str_with_comments = textwrap.dedent(
+        """
         ; ok test
         [core]
             key = val ; test
@@ -58,8 +61,10 @@ def test_remove_config_comments():
         ; yup
             ok = yeah
             zz = yepyep   ;    ok  what
-    """).strip()
-    str_without_comments = textwrap.dedent("""
+    """
+    ).strip()
+    str_without_comments = textwrap.dedent(
+        """
         [core]
             key = val
             key2 = val
@@ -68,7 +73,8 @@ def test_remove_config_comments():
         [third]
             ok = yeah
             zz = yepyep
-    """).strip()
+    """
+    ).strip()
 
     # Run
     with mock.patch("gitstatus.git.config.GitConfig._load"):
@@ -107,7 +113,7 @@ def test_parse_gitconfig(config):
                 "url": "git@github.com:upstream/repo.git",
                 "fetch": "+refs/heads/*:refs/remotes/upstream/*",
             },
-        }
+        },
     }
     parsed_config = _parse_gitconfig(config)
     assert parsed_config == expected_result

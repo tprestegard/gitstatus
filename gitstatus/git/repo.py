@@ -35,17 +35,23 @@ class GitRepo:
     def _check_is_git_repo(self):
         err_msg = None
         if not os.path.exists(self._git_path):
-            err_msg = (f"Directory at {self.path} is not a git repo - "
-                       "no .git directory")
+            err_msg = (
+                f"Directory at {self.path} is not a git repo - "
+                "no .git directory"
+            )
         elif not os.path.exists(self._git_config_path):
-            err_msg = (f"Git config (expected at {self._git_config_path}) "
-                       "does not exist")
+            err_msg = (
+                f"Git config (expected at {self._git_config_path}) "
+                "does not exist"
+            )
         if err_msg:
             raise FileNotFoundError(err_msg)
 
         if not os.path.isdir(self._git_path):
-            err_msg = (f"Expected .git directory {self._git_path} is not a "
-                       "directory")
+            err_msg = (
+                f"Expected .git directory {self._git_path} is not a "
+                "directory"
+            )
         elif not os.path.isfile(self._git_config_path):
             err_msg = f"Git config ({self._git_config_path}) is not a file"
 
@@ -59,8 +65,9 @@ class GitRepo:
         for section_name in cp.sections():
             match = self.SECTION_REGEX.search(section_name)
             if not match:
-                raise ValueError("Error parsing git config section "
-                                 f"{section_name}")
+                raise ValueError(
+                    "Error parsing git config section " f"{section_name}"
+                )
             header, subheader = match.groups()
             params = dict(cp.items(section_name))
             if subheader is None:
@@ -87,10 +94,12 @@ class GitRepo:
         self._run_command("fetch")
 
     def get_refs(self) -> List[Dict[str, str]]:
-        cmd = (f'for-each-ref refs/heads '
-               '--format="{\\"name\\": \\"%(refname:short)\\", '
-               '\\"remote\\": \\"%(upstream:remotename)\\", '
-               '\\"status\\": \\"%(upstream:track)\\"}"')
+        cmd = (
+            "for-each-ref refs/heads "
+            '--format="{\\"name\\": \\"%(refname:short)\\", '
+            '\\"remote\\": \\"%(upstream:remotename)\\", '
+            '\\"status\\": \\"%(upstream:track)\\"}"'
+        )
         output = self._run_command(cmd)
         return [json.loads(entry) for entry in output.split("\n") if entry]
 
@@ -99,8 +108,10 @@ class GitRepo:
         if not output:
             self._status = {}
         else:
-            self._status = dict(e.strip().split(' ', 1)[::-1] for e in
-                                output.strip().split('\n'))
+            self._status = dict(
+                e.strip().split(" ", 1)[::-1]
+                for e in output.strip().split("\n")
+            )
 
     @property
     def has_uncommitted_changes(self):

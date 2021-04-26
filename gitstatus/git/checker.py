@@ -8,7 +8,7 @@ from .issues import repo as REPO, branch as BRANCH
 
 
 class GitChecker:
-    def __init__(self, repo: 'GitRepo', printer: 'Printer', **kwargs):
+    def __init__(self, repo: "GitRepo", printer: "Printer", **kwargs):
         self.repo = repo
         self.printer = printer
         self.kwargs = kwargs
@@ -39,8 +39,10 @@ class GitChecker:
             try:
                 self.repo.fetch()
             except Exception as ex:
-                self.printer.echo(f"Error fetching remote for repo "
-                                  "{self.repo.path}: {str(ex)}")
+                self.printer.echo(
+                    "Error fetching remote for repo "
+                    f"{self.repo.path}: {str(ex)}"
+                )
 
         # Get status of current refs and parse it
         refs = self.repo.get_refs()

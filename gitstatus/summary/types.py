@@ -33,7 +33,7 @@ class StyledStr(str):
     def style(cls, s: str):
         return s
 
-    #def split(self, *args, **kwargs):
+    # def split(self, *args, **kwargs):
     #    return [self.__class__(s) for s in self.raw.split(*args, **kwargs)]
 
 

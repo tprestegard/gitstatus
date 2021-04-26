@@ -1,6 +1,5 @@
-from abc import ABC, abstractmethod
 from textwrap import wrap
-from typing import Any, Dict, List, Union, TYPE_CHECKING
+from typing import Any, List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .types import StyledStr
@@ -10,7 +9,7 @@ def _transpose(array: List[List[Any]]) -> List[List[Any]]:
     return list(map(list, zip(*array)))
 
 
-def _pad(cell: Union[str, 'StyledStr'], width: int, align: str = 'l') -> str:
+def _pad(cell: Union[str, "StyledStr"], width: int, align: str = "l") -> str:
     diff = width - len(cell)
     if diff < 0:
         # TODO
@@ -21,7 +20,7 @@ def _pad(cell: Union[str, 'StyledStr'], width: int, align: str = 'l') -> str:
 
     # Pad
     if align == "l":
-        output = content + " "*diff
+        output = content + " " * diff
     else:
         # TODO
         raise NotImplementedError()
@@ -30,7 +29,7 @@ def _pad(cell: Union[str, 'StyledStr'], width: int, align: str = 'l') -> str:
 
 
 class DividerFormatter:
-    def __init__(self, elem: str = '-', edge: str = '+', col_sep: str = '+'):
+    def __init__(self, elem: str = "-", edge: str = "+", col_sep: str = "+"):
         self.elem = elem
         self.edge = edge
         self.col_sep = col_sep
@@ -41,7 +40,7 @@ class DividerFormatter:
 
 
 class RowFormatter:
-    def __init__(self, edge: str = '|', col_sep: str = '|', padding: int = 1):
+    def __init__(self, edge: str = "|", col_sep: str = "|", padding: int = 1):
         self.edge = edge
         self.col_sep = col_sep
         self.padding = padding
@@ -49,30 +48,9 @@ class RowFormatter:
     def format(self, columns: List[str]):
         padding = self.padding * " "
         col_sep = f"{padding}{self.col_sep}{padding}"
-        return f"{self.edge}{padding}{col_sep.join(columns)}{padding}{self.edge}"
-
-
-#class HeaderFormatter:
-#    def __init__(self, row_formatter: RowFormatter,
-#                 bottom_divider_formatter: DividerFormatter = None,
-#                 top_divider_formatter: DividerFormatter = None):
-#        # Assign attributes
-#        self.row_formatter = row_formatter
-#        self.bottom_formatter = bottom_divider_formatter
-#        self.top_formatter = top_divider_formatter
-#
-#    def format(self, titles: List[str]):
-#        top_divider = bottom_divider = ""
-#        if self.top_formatter:
-#            top_divider = self.top_formatter.format(
-#                [len(title) + self.row_formatter.padding * 2 for title in titles]
-#            ) + "\n"
-#        if self.bottom_formatter:
-#            bottom_divider = "\n" + self.bottom_formatter.format(
-#                [len(title) + self.row_formatter.padding * 2 for title in titles]
-#            )
-#        content = self.row_formatter.format(titles)
-#        return f"{top_divider}{content}{bottom_divider}"
+        return (
+            f"{self.edge}{padding}{col_sep.join(columns)}{padding}{self.edge}"
+        )
 
 
 class Row:
@@ -85,7 +63,7 @@ class Row:
     def wrap(self, widths: List[int], force: bool = False):
         if self._is_wrapped and not force:
             # TODO
-            raise ValueError('')
+            raise ValueError("")
 
         # Wrap each column as necessary
         cols = []
@@ -115,8 +93,9 @@ class Row:
         else:
             return [len(col) for col in self._raw_cols]
 
-    def format(self, row_formatter: RowFormatter, widths: List[int] = None) \
-            -> str:
+    def format(
+        self, row_formatter: RowFormatter, widths: List[int] = None
+    ) -> str:
         # Pad and style
         if widths:
             padded_rows = [
@@ -127,30 +106,37 @@ class Row:
             padded_rows = self._wrapped_cols
 
         # Formatting
-        return "\n".join(
-            [row_formatter.format(row) for row in padded_rows]
-        )
-        #if self._is_wrapped:
-        #else:
+        return "\n".join([row_formatter.format(row) for row in padded_rows])
+        # if self._is_wrapped:
+        # else:
         #    return row_formatter.format(self._raw_cols)
-        
 
     def as_str(self, formatter: RowFormatter) -> str:
         self._wrap()
-        # TODO: after wrapping, we need to reevaluate how wide the columns need to be
-        padded_rows = [[f"{col:<{self.widths[i]}}" for i, col in enumerate(row)] for row in self.subrows]
-        self._str = "\n".join([self.formatter.format(row) for row in padded_rows])
+        # TODO: after wrapping, we need to reevaluate how wide the columns need
+        # to be
+        padded_rows = [
+            [f"{col:<{self.widths[i]}}" for i, col in enumerate(row)]
+            for row in self.subrows
+        ]
+        self._str = "\n".join(
+            [self.formatter.format(row) for row in padded_rows]
+        )
         return self._str
 
 
 class TableBase:
-    def __init__(self, row_list: List[List[str]], column_titles: List[str],
-                 max_column_widths: List[int],
-                 row_formatter: RowFormatter,
-                 header_formatter: DividerFormatter,
-                 title: str = None,
-                 footer_formatter: DividerFormatter = None,
-                 row_divider_formatter: DividerFormatter = None):
+    def __init__(
+        self,
+        row_list: List[List[str]],
+        column_titles: List[str],
+        max_column_widths: List[int],
+        row_formatter: RowFormatter,
+        header_formatter: DividerFormatter,
+        title: str = None,
+        footer_formatter: DividerFormatter = None,
+        row_divider_formatter: DividerFormatter = None,
+    ):
 
         # Assign attributes
         self._raw_rows = row_list
@@ -169,22 +155,22 @@ class TableBase:
 
     def _calculate_column_widths(self, rows: List[Row]) -> List[int]:
         current_widths = [
-            max(width) for width in _transpose(
-                [row.get_col_widths() for row in rows]
-            )
+            max(width)
+            for width in _transpose([row.get_col_widths() for row in rows])
         ]
 
         # Widths to use
-        return [min(cw, self.max_widths[i]) for i, cw in
-                enumerate(current_widths)]
-        ## Transpose
-        #cols = _transpose(rows)
+        return [
+            min(cw, self.max_widths[i]) for i, cw in enumerate(current_widths)
+        ]
+        # Transpose
+        # cols = _transpose(rows)
 
-        ## Current widths
-        #current_widths = [max([len(item) for item in col]) for col in cols]
+        # Current widths
+        # current_widths = [max([len(item) for item in col]) for col in cols]
 
-        ## Widths to use
-        #return [min(cw, self.max_widths[i]), for i, cw in
+        # Widths to use
+        # return [min(cw, self.max_widths[i]), for i, cw in
         #        enumerate(current_widths)]
 
     def as_str(self) -> str:
@@ -224,12 +210,13 @@ class TableBase:
         header_str = header_divider + "\n" + titles_str + "\n" + header_divider
 
         # Add full table title, if provided
-        #if self.title:
-        #    table_title = 
+        # if self.title:
+        #    table_title =
 
         # Pad and format rows
-        rows_list = [row.format(self.row_formatter, widths) for row in
-                     self.rows]
+        rows_list = [
+            row.format(self.row_formatter, widths) for row in self.rows
+        ]
 
         # Join rows with divider (if provided)
         row_divider = "\n"
@@ -238,18 +225,32 @@ class TableBase:
         rows_str = row_divider.join(rows_list)
 
         # Combine header and rows and footer; assign to self._str
-        self._str = header_str + "\n" + rows_str + "\n" + \
-            self.footer_formatter.format(divider_widths)
+        self._str = (
+            header_str
+            + "\n"
+            + rows_str
+            + "\n"
+            + self.footer_formatter.format(divider_widths)
+        )
         return self._str
 
 
 class SimpleTable(TableBase):
-    def __init__(self, row_list: List[List[str]], column_titles: List[str],
-                 max_column_widths: List[int]):
+    def __init__(
+        self,
+        row_list: List[List[str]],
+        column_titles: List[str],
+        max_column_widths: List[int],
+    ):
         row_formatter = RowFormatter()
         header_formatter = DividerFormatter(elem="=")
-        row_divider_formatter =  DividerFormatter()
-        super().__init__(row_list, column_titles, max_column_widths,
-                         row_formatter, header_formatter,
-                         footer_formatter=row_divider_formatter,
-                         row_divider_formatter=row_divider_formatter)
+        row_divider_formatter = DividerFormatter()
+        super().__init__(
+            row_list,
+            column_titles,
+            max_column_widths,
+            row_formatter,
+            header_formatter,
+            footer_formatter=row_divider_formatter,
+            row_divider_formatter=row_divider_formatter,
+        )

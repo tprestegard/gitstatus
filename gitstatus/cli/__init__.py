@@ -6,7 +6,8 @@ import click
 from .printer import Printer
 from ..git import GitChecker, GitRepo
 from ..summary.summary import (
-    BasicSummary, RepoSummary, SUMMARY_TYPES, DetailedSummary
+    SUMMARY_TYPES,
+    DetailedSummary,
 )
 
 
@@ -21,8 +22,9 @@ def check_repo(path: str, printer: Printer, **kwargs):
     try:
         repo = GitRepo(path)
     except FileNotFoundError:
-        printer.echo(f"{path} does not appear to be a git repo, skipping",
-                     level="debug")
+        printer.echo(
+            f"{path} does not appear to be a git repo, skipping", level="debug"
+        )
         return
 
     # Analyze actual repos
@@ -40,16 +42,33 @@ def check_repo(path: str, printer: Printer, **kwargs):
 @click.option("-i", "--include", multiple=True, type=str, default=[])
 @click.option("-d", "--include-dir", multiple=True, type=str, default=[])
 @click.option("-v", "--verbose", is_flag=True, help="Run in verbose mode")
-@click.option("-s", "--summary-type", type=click.Choice(list(SUMMARY_TYPES)),
-              default=list(SUMMARY_TYPES)[0], show_default=True,
-              help="TBD")
-@click.option("--pull-behind", is_flag=True,
-              help="Pull any branches that are behind remote. Only for cases "
-                   "where a simple pull will sync the branches.")
-@click.option("--skip-fetch", is_flag=True,
-              help="Skip fetching from remote to speed up runtime.")
-def main(include: List[str], include_dir: List[str], verbose: bool,
-         summary_type: str, pull_behind: bool, skip_fetch: bool):
+@click.option(
+    "-s",
+    "--summary-type",
+    type=click.Choice(list(SUMMARY_TYPES)),
+    default=list(SUMMARY_TYPES)[0],
+    show_default=True,
+    help="TBD",
+)
+@click.option(
+    "--pull-behind",
+    is_flag=True,
+    help="Pull any branches that are behind remote. Only for cases "
+    "where a simple pull will sync the branches.",
+)
+@click.option(
+    "--skip-fetch",
+    is_flag=True,
+    help="Skip fetching from remote to speed up runtime.",
+)
+def main(
+    include: List[str],
+    include_dir: List[str],
+    verbose: bool,
+    summary_type: str,
+    pull_behind: bool,
+    skip_fetch: bool,
+):
     """
     TBD full docstring
     """
@@ -67,22 +86,24 @@ def main(include: List[str], include_dir: List[str], verbose: bool,
         top_dir = os.path.abspath(os.path.expanduser(top_dir))
         for sub_dir in os.listdir(top_dir):
             abs_path = os.path.join(top_dir, sub_dir)
-            issues = check_repo(abs_path, printer, pull_behind=pull_behind,
-                                skip_fetch=skip_fetch)
+            issues = check_repo(
+                abs_path,
+                printer,
+                pull_behind=pull_behind,
+                skip_fetch=skip_fetch,
+            )
             if issues is not None:
                 full_issues[abs_path] = issues
 
     # Loop over repos that were directly included
     for path in include:
         abs_path = os.path.abspath(os.path.expanduser(path))
-        issues = check_repo(abs_path, printer, pull_behind=pull_behind,
-                             skip_fetch=skip_fetch)
+        issues = check_repo(
+            abs_path, printer, pull_behind=pull_behind, skip_fetch=skip_fetch
+        )
         if issues is not None:
             full_issues[abs_path] = issues
 
     # Print summary
-    #summarizer = BasicSummary(full_issues)
-    #summarizer = RepoSummary(full_issues)
     summarizer = DetailedSummary(full_issues)
     print(summarizer.summarize())
-    
