@@ -4,10 +4,10 @@ from setuptools import setup, find_packages
 from typing import List
 
 
-def get_requirements -> List[str]:
+def get_requirements() -> List[str]:
     """Get list of requirements from requirements.txt file"""
     with open("requirements.txt") as fp:
-        requirements = [buf.rstrip() for bug in fp.readlines()]
+        requirements = [buf.rstrip() for buf in fp.readlines()]
     return requirements
 
 
