@@ -81,28 +81,27 @@ def main(
     # Dict for holding issues
     full_issues = {}
 
+    # Get list of all repositories to check
+    all_dirs = []
+
     # Loop over included directories
     for top_dir in include_dir:
         top_dir = os.path.abspath(os.path.expanduser(top_dir))
-        for sub_dir in os.listdir(top_dir):
-            abs_path = os.path.join(top_dir, sub_dir)
-            issues = check_repo(
-                abs_path,
-                printer,
-                pull_behind=pull_behind,
-                skip_fetch=skip_fetch,
-            )
-            if issues is not None:
-                full_issues[abs_path] = issues
+        sub_dirs = [
+            os.path.join(top_dir, s) for s in os.listdir(top_dir)
+            if os.path.isdir(os.path.join(top_dir, s))
+        ]
+        all_dirs.extend(sub_dirs)
 
-    # Loop over repos that were directly included
-    for path in include:
-        abs_path = os.path.abspath(os.path.expanduser(path))
-        issues = check_repo(
-            abs_path, printer, pull_behind=pull_behind, skip_fetch=skip_fetch
-        )
-        if issues is not None:
-            full_issues[abs_path] = issues
+    # Add repositories that were directly included
+    all_dirs.extend([
+        os.path.abspath(os.path.expanduser(path)) for path in include
+    ])
+
+    # TODO: Loop over all repositories
+    for repo in all_dirs:
+        pass
+
 
     # Print summary
     summarizer = DetailedSummary(full_issues)
