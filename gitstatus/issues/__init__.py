@@ -1,4 +1,4 @@
-import enum 
+import enum
 
 from .base import Issue  # noqa: F401
 from .branch import BranchIssue as BRANCH

@@ -7,8 +7,8 @@ class Issue:
         self.type_ = type_
         if not desc:
             desc = " ".join(
-                [word.lower() for word in name.split("_")]).capitalize()]
-            )
+                [word.lower() for word in name.split("_")]
+            ).capitalize()
 
     def __repr__(self):
         return self.name

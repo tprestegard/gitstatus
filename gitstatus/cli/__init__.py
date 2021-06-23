@@ -3,39 +3,12 @@ from typing import List
 
 import click
 
-from .printer import Printer
-from ..git import GitChecker, GitRepo
+# from .printer import Printer
+# from ..checker import RepoChecker
 from ..summary.summary import (
     SUMMARY_TYPES,
     DetailedSummary,
 )
-
-
-# Helper function
-def check_repo(path: str, printer: Printer, **kwargs):
-    # Skip non-directories
-    if not os.path.isdir(path):
-        printer.echo(f"{path} is not a directory, skipping", level="debug")
-        return
-
-    # Skip non-repos without failing
-    try:
-        repo = GitRepo(path)
-    except FileNotFoundError:
-        printer.echo(
-            f"{path} does not appear to be a git repo, skipping", level="debug"
-        )
-        return
-
-    # Analyze actual repos
-    checker = GitChecker(repo, printer, **kwargs)
-    checker.run_checks()
-
-    # Combine issues and return
-    return {
-        "repo": checker.repo_issues,
-        "branch": checker.branch_issues,
-    }
 
 
 @click.command()
@@ -76,7 +49,7 @@ def main(
     log_level = "debug" if verbose else "info"
 
     # Set up printer
-    printer = Printer(level=log_level)
+    # printer = Printer(level=log_level)
 
     # Dict for holding issues
     full_issues = {}
@@ -88,20 +61,20 @@ def main(
     for top_dir in include_dir:
         top_dir = os.path.abspath(os.path.expanduser(top_dir))
         sub_dirs = [
-            os.path.join(top_dir, s) for s in os.listdir(top_dir)
+            os.path.join(top_dir, s)
+            for s in os.listdir(top_dir)
             if os.path.isdir(os.path.join(top_dir, s))
         ]
         all_dirs.extend(sub_dirs)
 
     # Add repositories that were directly included
-    all_dirs.extend([
-        os.path.abspath(os.path.expanduser(path)) for path in include
-    ])
+    all_dirs.extend(
+        [os.path.abspath(os.path.expanduser(path)) for path in include]
+    )
 
     # TODO: Loop over all repositories
     for repo in all_dirs:
         pass
-
 
     # Print summary
     summarizer = DetailedSummary(full_issues)

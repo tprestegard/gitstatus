@@ -59,7 +59,7 @@ class RepoChecker:
                 )
 
         # Get status of current refs and parse it
-        refs = self.repo.get_refs()
+        #refs = self.repo.get_refs()
 
         # Loop over branches and check for issues
         for branch in repo.branches:
