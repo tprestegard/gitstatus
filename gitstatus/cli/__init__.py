@@ -4,7 +4,7 @@ from typing import List
 import click
 
 # from .printer import Printer
-# from ..checker import RepoChecker
+from ..checker import RepoChecker
 from ..summary.summary import (
     SUMMARY_TYPES,
     DetailedSummary,
@@ -72,10 +72,15 @@ def main(
         [os.path.abspath(os.path.expanduser(path)) for path in include]
     )
 
+    # Instantiate repo checker
+    checker = RepoChecker(fetch=(not skip_fetch), pull=pull_behind)
+
     # TODO: Loop over all repositories
+    results = {}
     for repo in all_dirs:
-        pass
+        results[repo] = checker.check_repo(repo)
 
     # Print summary
-    summarizer = DetailedSummary(full_issues)
-    print(summarizer.summarize())
+    print(results)
+    #summarizer = DetailedSummary(full_issues)
+    #print(summarizer.summarize())

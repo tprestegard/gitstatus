@@ -13,10 +13,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class RepoChecker:
     def __init__(self, **kwargs):
-        self.kwargs = kwargs
-        self.fetch = kwargs.get("fetch", False)
-        self.repo_issues = []
-        self.branch_issues = {}
+        self.fetch = kwargs.get("fetch", True)
+        self.pull = kwargs.get("pull", False)
 
     def check_repo(self, path: str) -> List["Issue"]:
         issues = []
@@ -36,8 +34,8 @@ class RepoChecker:
             issues.append(RepoIssue.NOT_ON_BRANCH)
 
         # Any uncommitted changes?
-        if self.repo.has_uncommitted_changes:
-            self.repo_issues.append(RepoIssue.UNCOMMITTED_CHANGES)
+        #if repo.has_uncommitted_changes:
+        #    issues.append(RepoIssue.UNCOMMITTED_CHANGES)
 
         # Any untracked files?
         if len(repo.untracked_files) > 0:
@@ -53,13 +51,14 @@ class RepoChecker:
                 for remote in repo.remotes:
                     remote.fetch()
             except Exception as ex:
+                # TODO - fix this
                 self.printer.echo(
                     "Error fetching remote for repo "
                     f"{self.repo.path}: {str(ex)}"
                 )
 
         # Get status of current refs and parse it
-        #refs = self.repo.get_refs()
+        #refs = repo.get_refs()
 
         # Loop over branches and check for issues
         for branch in repo.branches:
